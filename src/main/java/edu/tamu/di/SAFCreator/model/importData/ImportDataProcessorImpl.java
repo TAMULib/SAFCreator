@@ -21,6 +21,7 @@ import org.apache.tika.mime.MediaType;
 import org.apache.tika.mime.MimeTypes;
 
 import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 
 import edu.tamu.di.SAFCreator.Util;
 import edu.tamu.di.SAFCreator.model.Batch;
@@ -310,7 +311,11 @@ public class ImportDataProcessorImpl implements ImportDataProcessor {
                                             Bitstream bitstream = new Bitstream();
                                             bitstream.setBundle(bundle);
                                             bitstream.setSource(file.toURI());
-                                            bitstream.setRelativePath(directoryName + File.separator + file.getName());
+                                            if (batch.getFlattenDirectories()) {
+                                                bitstream.setRelativePath(file.getName());
+                                            } else {
+                                                bitstream.setRelativePath(directoryName + File.separator + file.getName());
+                                            }
                                             bitstream.setColumn(column);
                                             bitstream.setRow(linenumber);
                                             bundle.addBitstream(bitstream);
@@ -361,6 +366,10 @@ public class ImportDataProcessorImpl implements ImportDataProcessor {
             errorState = true;
         } catch (IllegalArgumentException e) {
             console.append("\tERROR: CSV file reader failed to read line " + linenumber + ", reason: " + e.getMessage() + ".\n");
+            e.printStackTrace();
+            errorState = true;
+        } catch (CsvValidationException e) {
+            console.append("\tERROR: CSV invalid input exception while reading Metadata input file " + metadataInputFileName + ".\n");
             e.printStackTrace();
             errorState = true;
         } finally {
